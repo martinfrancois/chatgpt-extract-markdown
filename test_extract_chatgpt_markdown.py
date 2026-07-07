@@ -7,8 +7,11 @@ import pytest
 from extract_chatgpt_markdown import (
     ExportValidationError,
     ValidationReport,
+    active_markdown_fence,
     as_string_keyed_dict,
     branch_timestamp_value,
+    close_unclosed_markdown_fence,
+    clean_markdown_link_urls,
     clean_url,
     compact_whitespace,
     contains,
@@ -1158,7 +1161,7 @@ def test_code_messages_and_marker_cleanup_render_readably() -> None:
     assert "### comment" not in code_with_hash
     assert role_label({}) == "Message"
     assert role_label({"author": {"role": "assistant", "name": "tool"}}) == "Assistant (tool)"
-    assert clean_url("https://example.com/page?utm_source=chatgpt.com&a=1") == (
+    assert clean_url("https://example.com/page?utm_source=chatgpt.com&srsltid=abc&a=1") == (
         "https://example.com/page?a=1"
     )
     assert compact_whitespace(" Title\n\n  with   spaces ") == "Title with spaces"
@@ -1183,6 +1186,36 @@ def test_code_messages_and_marker_cleanup_render_readably() -> None:
     assert "Apple menu settings" in private_glyph_body
     assert "Synthetic event -  Talk" in private_glyph_body
     assert_no_private_markers(private_glyph_body)
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (
+            "[Example](https://example.com/page?utm_source=x&srsltid=y&a=1)",
+            "[Example](https://example.com/page?a=1)",
+        ),
+        (
+            "```md\n[Keep](https://example.com/page?utm_source=x&a=1)\n```",
+            "```md\n[Keep](https://example.com/page?utm_source=x&a=1)\n```",
+        ),
+        (
+            "![Image](https://example.com/image.png?utm_source=x)",
+            "![Image](https://example.com/image.png?utm_source=x)",
+        ),
+    ],
+)
+def test_clean_markdown_link_urls_removes_tracking_outside_code(
+    source: str, expected: str
+) -> None:
+    # Given
+    markdown = source
+
+    # When
+    result = clean_markdown_link_urls(markdown)
+
+    # Then
+    assert result == expected
 
 
 def test_graph_and_branch_rendering_skip_invalid_hidden_and_empty_nodes(tmp_path: Path) -> None:
@@ -1259,6 +1292,66 @@ def test_markdown_output_helper_detects_unclosed_fences(
 
     # Then
     assert result is expected
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("```tsx\n<Kbd>Tab</K", "```tsx\n<Kbd>Tab</K\n```"),
+        ("~~~sh\necho hello\n", "~~~sh\necho hello\n~~~"),
+        ("```py\nprint('ok')\n```\n", "```py\nprint('ok')\n```\n"),
+    ],
+)
+def test_close_unclosed_markdown_fence_closes_message_boundary(
+    source: str, expected: str
+) -> None:
+    # Given
+    markdown = source
+
+    # When
+    result = close_unclosed_markdown_fence(markdown)
+
+    # Then
+    assert result == expected
+    assert active_markdown_fence(result) is None
+
+
+def test_render_branch_markdown_closes_unclosed_message_fence_before_next_header(
+    tmp_path: Path,
+) -> None:
+    # Given
+    conversation: dict[str, object] = {
+        "title": "Unclosed fence fixture",
+        "id": "unclosed-fence",
+        "current_node": "assistant",
+        "mapping": {
+            "root": root_node(["user"]),
+            "user": message(
+                "user",
+                "user",
+                "```tsx\n<TableCell>\n  <Kbd>Tab</K",
+                parent="root",
+                children=["assistant"],
+            ),
+            "assistant": message("assistant", "assistant", "after fence", parent="user"),
+        },
+    }
+
+    # When
+    markdown = render_branch_markdown(
+        conversation=conversation,
+        source_file=tmp_path / "conversations-000.json",
+        branch_index=1,
+        branch_count=1,
+        path=["user", "assistant"],
+        matching_ids=[],
+        search_string=None,
+        include_reasoning=False,
+    )
+
+    # Then
+    assert markdown_has_unclosed_fence(markdown) is False
+    assert "\n```\n\n## Assistant" in markdown
 
 
 @pytest.mark.parametrize(

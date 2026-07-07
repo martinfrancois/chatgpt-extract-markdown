@@ -86,7 +86,20 @@ KNOWN_PRIVATE_USE_GLYPH_REPLACEMENTS = {
 }
 FILENAME_TIMESTAMP_FALLBACK = "0000-00-00T00-00-00.000000Z"
 FILENAME_TIMESTAMP_FORMAT = "%Y-%m-%dT%H-%M-%S.%fZ"
+TRACKING_QUERY_PARAMETERS = {
+    "dclid",
+    "fbclid",
+    "gclid",
+    "gclsrc",
+    "gbraid",
+    "igshid",
+    "mc_cid",
+    "mc_eid",
+    "srsltid",
+    "wbraid",
+}
 PRIVATE_USE_MARKER_RE: re.Pattern[str] = re.compile(r"[\ue000-\uf8ff]")
+MARKDOWN_LINK_RE: re.Pattern[str] = re.compile(r"(?<!!)\[([^\]\n]+)\]\(([^)\s]+)\)")
 CHATGPT_MARKER_RE: re.Pattern[str] = re.compile(
     r"\ue200(?P<kind>[^\ue202\ue201]+)(?P<payload>(?:\ue202[^\ue201]*)?)\ue201"
 )
@@ -1036,9 +1049,31 @@ def clean_url(url: str) -> str:
     query = [
         (key, value)
         for key, value in parse_qsl(parsed.query, keep_blank_values=True)
-        if not key.lower().startswith("utm_")
+        if not is_tracking_query_parameter(key)
     ]
     return urlunsplit(parsed._replace(query=urlencode(query, doseq=True)))
+
+
+def is_tracking_query_parameter(key: str) -> bool:
+    normalized = key.lower()
+    return normalized.startswith("utm_") or normalized in TRACKING_QUERY_PARAMETERS
+
+
+def clean_markdown_link_urls(text: str) -> str:
+    lines: list[str] = []
+    active_fence: str | None = None
+
+    for line in text.splitlines(keepends=True):
+        content = line.rstrip("\r\n")
+        line_ending = line[len(content) :]
+        active_fence, is_fence_marker = update_fence_state(active_fence, content)
+        if active_fence is None and not is_fence_marker:
+            content = MARKDOWN_LINK_RE.sub(
+                lambda match: f"[{match.group(1)}]({clean_url(match.group(2))})",
+                content,
+            )
+        lines.append(f"{content}{line_ending}")
+    return "".join(lines)
 
 
 def source_label(source: dict[str, object]) -> str:
@@ -1317,8 +1352,37 @@ def demote_markdown_headings(text: str, levels: int = 2) -> str:
     return "".join(lines)
 
 
+def active_markdown_fence(text: str) -> tuple[str, int] | None:
+    active_fence: tuple[str, int] | None = None
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        if not (stripped.startswith("```") or stripped.startswith("~~~")):
+            continue
+        run = stripped.split(maxsplit=1)[0]
+        marker = run[0]
+        length = len(run) - len(run.lstrip(marker))
+        if active_fence is None:
+            active_fence = (marker, length)
+        elif marker == active_fence[0] and length >= active_fence[1]:
+            active_fence = None
+    return active_fence
+
+
+def close_unclosed_markdown_fence(text: str) -> str:
+    active_fence = active_markdown_fence(text)
+    if active_fence is None:
+        return text
+    marker, length = active_fence
+    separator = "" if text.endswith("\n") else "\n"
+    return f"{text}{separator}{marker * length}"
+
+
 def prepare_message_body(text: str, message: dict[str, object]) -> str:
-    return demote_markdown_headings(replace_citation_markers(text, message))
+    return close_unclosed_markdown_fence(
+        demote_markdown_headings(
+            clean_markdown_link_urls(replace_citation_markers(text, message))
+        )
+    )
 
 
 def fence_for(text: str) -> str:
@@ -1735,19 +1799,7 @@ def write_branch_outputs(
 
 
 def markdown_has_unclosed_fence(text: str) -> bool:
-    active_fence: tuple[str, int] | None = None
-    for line in text.splitlines():
-        stripped = line.lstrip()
-        if not (stripped.startswith("```") or stripped.startswith("~~~")):
-            continue
-        run = stripped.split(maxsplit=1)[0]
-        marker = run[0]
-        length = len(run) - len(run.lstrip(marker))
-        if active_fence is None:
-            active_fence = (marker, length)
-        elif marker == active_fence[0] and length >= active_fence[1]:
-            active_fence = None
-    return active_fence is not None
+    return active_markdown_fence(text) is not None
 
 
 def output_file_metadata(text: str, label: str) -> str:

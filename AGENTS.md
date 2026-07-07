@@ -31,6 +31,8 @@ This project was created to extract selected conversations from a ChatGPT data e
 - Preserve explicit conversion behavior for newly observed export artifacts: alternate-terminated navigation markers and truncated citation fragments are removed because they lack reliable citation metadata; copied private-use icon glyphs are converted to readable labels such as `Location:`, `Phone:`, `Email:`, `Link:`, `Apple menu`, or a simple separator.
 - Do not broaden private-use glyph handling into silent deletion. Add a specific conversion rule and synthetic tests for each newly observed glyph or marker form, then rerun full-export `--validate-only`.
 - Demote Markdown headings inside message bodies so the transcript's own message headers remain the top visible structure. Do not demote headings inside fenced code blocks, raw code-like messages, hashtags, escaped hashes, indented comments, or ordinary prose containing `#`.
+- Close unclosed fenced code blocks at message boundaries so malformed exported Markdown cannot swallow the next transcript header.
+- Clean known tracking query parameters from citation and Markdown-link URLs outside code fences.
 - Keep export validation fail-closed. Unknown content types, marker kinds, reference types, malformed node graphs, and malformed timestamps should produce validation errors rather than best-effort output. Preserve `--validate-only` so full exports can be scanned without converting all conversations.
 - Treat README as the public feature inventory for the script.
 

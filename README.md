@@ -36,11 +36,12 @@ Extract ChatGPT data-export conversations to Markdown. You can search for conver
 - Handles known malformed ChatGPT marker fragments observed in exports, including alternate-terminated navigation markers and truncated citation fragments.
 - Removes unresolved, orphaned, or malformed raw marker glyphs instead of leaving unreadable artifacts in the transcript.
 - Normalizes known private-use icon glyphs from copied content into readable text labels, including location, phone, email, link, Apple menu, and separator icons.
-- Cleans citation URLs by removing tracking query parameters such as `utm_*`.
+- Cleans citation and Markdown-link URLs by removing known tracking query parameters such as `utm_*`, `srsltid`, `fbclid`, and `gclid`.
 - Normalizes citation link labels to single-line readable text.
 - Demotes Markdown headings inside message bodies so transcript message headers remain visually dominant.
 - Preserves hashes in prose, hashtags, escaped hashes, indented comments, fenced code, and raw code-like messages.
 - Leaves headings inside fenced code blocks unchanged.
+- Closes unclosed fenced code blocks at message boundaries so one malformed message cannot swallow the next transcript header.
 - Handles common content shapes from the export, including text parts, code content, attachments, file references, and nested text fields.
 - Processes one conversation JSON file at a time, so large split exports do not require loading the whole export into memory at once.
 - Omits the per-file path list for `--all` exports to avoid flooding the terminal with thousands of paths.
