@@ -154,6 +154,33 @@ python extract_chatgpt_markdown.py \
 - Paired metadata is checked when `--output-mode both` is used.
 - To verify a large export without writing every transcript, use `--validate-only`; tests use small synthetic fixtures for `--all` rather than converting a full private archive.
 
+## Reference Full-Export Run
+
+These numbers are from one local full-export run with `--all --output-mode both`. They are meant as a rough reference; runtime and output size depend heavily on export size, branch count, message length, and disk speed.
+
+| Metric | Value |
+|---|---:|
+| Source JSON files | 52 |
+| Conversations | 5,195 |
+| Nodes | 127,811 |
+| Messages | 122,616 |
+| Root-to-leaf branches | 8,339 |
+| Markdown files written | 16,678 |
+| Normal transcript files | 8,339 |
+| Reasoning transcript files | 8,339 |
+| Conversion time | 61.20 seconds |
+| Throughput | 272.5 files/second |
+| Output size | 645.4 MiB |
+| Normal transcript size | 256.4 MiB |
+| Reasoning transcript size | 389.0 MiB |
+| Median file size | 9.3 KiB |
+| Largest file size | 1.7 MiB |
+| Median lines per file | 179 |
+| Largest file lines | 38,566 |
+| Post-conversion integrity check | 22.51 seconds |
+
+The integrity check found zero raw private-use marker glyphs, zero unclosed Markdown fences, zero reasoning traces leaking into normal transcripts, and zero missing reasoning headers.
+
 ## Marker And Glyph Conversion Behavior
 
 - Web citation markers with export metadata become readable Markdown links.
