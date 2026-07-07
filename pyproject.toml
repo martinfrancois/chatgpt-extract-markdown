@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chatgpt-extract-markdown"
+version = "0.1.0"
+description = "Extract ChatGPT export conversations to Markdown."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = []
+keywords = ["chatgpt", "export", "markdown", "conversation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+
+[project.scripts]
+chatgpt-extract-markdown = "extract_chatgpt_markdown:main"
+
+[tool.setuptools]
+py-modules = ["extract_chatgpt_markdown"]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]
+addopts = "--cov=extract_chatgpt_markdown --cov-report=term-missing --cov-fail-under=90"
+
+[tool.pyrefly]
+project-includes = ["extract_chatgpt_markdown.py", "test_extract_chatgpt_markdown.py"]
+project-excludes = ["**/__pycache__/**", ".venv/**"]
+python-version = "3.10"

@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.py[cod]
+*.egg-info/
+
+# ChatGPT exports and extracted transcripts can contain private data.
+conversations.json
+conversations-*.json
+chat.html
+file-*.dat
+file_*.dat
+output/
+extracted*/
+private-output/
