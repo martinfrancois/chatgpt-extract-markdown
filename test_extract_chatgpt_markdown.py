@@ -1164,6 +1164,7 @@ def test_code_messages_and_marker_cleanup_render_readably() -> None:
     assert clean_url("https://example.com/page?utm_source=chatgpt.com&srsltid=abc&a=1") == (
         "https://example.com/page?a=1"
     )
+    assert clean_url("https://example.com/[broken") == "https://example.com/[broken"
     assert compact_whitespace(" Title\n\n  with   spaces ") == "Title with spaces"
     assert CITATION_MARKER not in citation_body
     assert UNRESOLVED_CITATION_MARKER not in citation_body

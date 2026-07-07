@@ -1045,7 +1045,10 @@ def compact_whitespace(value: str) -> str:
 
 
 def clean_url(url: str) -> str:
-    parsed = urlsplit(url)
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return url
     query = [
         (key, value)
         for key, value in parse_qsl(parsed.query, keep_blank_values=True)
