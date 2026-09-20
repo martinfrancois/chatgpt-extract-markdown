@@ -72,6 +72,23 @@ The extractor itself uses only the Python standard library. The dependencies are
 
 ## Usage
 
+Try the included synthetic conversation before using your own export:
+
+```bash
+chatgpt-extract-markdown examples/synthetic-export \
+  --all --output-folder output/example --output-mode normal
+```
+
+This writes one Markdown transcript with four messages about a fictional report.
+All names, IDs, dates and messages in `examples/synthetic-export` are invented.
+The generated file stays under the ignored `output/` directory.
+
+The supported input is a JSON array of conversations in `conversations.json`
+or `conversations-*.json`. Each conversation contains a `mapping` of message
+nodes with parent/child links. The example shows this shape. Export formats
+change; unknown content types and malformed graphs produce validation errors.
+Python 3.12 is the CI-tested runtime.
+
 Search for a string and export matching branches:
 
 ```bash
@@ -209,6 +226,12 @@ pyrefly coverage check --strict --fail-under 100
 ```
 
 Both commands are also run by the GitHub Actions workflow in `.github/workflows/ci.yml`.
+
+CI also runs the documented synthetic example. Actions use pinned commits and
+read-only repository permissions. Renovate pins development dependencies, waits
+seven days for ordinary releases, and keeps major updates for review. Eligible
+non-major updates merge after required checks pass; security updates bypass the
+release-age delay. Require the `test` check before enabling Renovate automerge.
 
 Check the installed CLI entry point:
 

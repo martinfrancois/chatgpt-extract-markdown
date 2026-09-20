@@ -17,3 +17,6 @@ file_*.dat
 output/
 extracted*/
 private-output/
+
+# This committed example contains invented conversations only.
+!examples/synthetic-export/conversations.json
