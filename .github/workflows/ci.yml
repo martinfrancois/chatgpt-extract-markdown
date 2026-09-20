@@ -1,37 +1,30 @@
 name: CI
-
 on:
   push:
+    branches: [main]
   pull_request:
-
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   test:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
           cache: pip
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python -m pip install -e .
-
-      - name: Check CLI entry point
-        run: chatgpt-extract-markdown --help
-
-      - name: Run tests
-        run: pytest
-
-      - name: Run pyrefly strict
-        run: pyrefly check --preset strict
-
-      - name: Enforce 100% strict type coverage
-        run: pyrefly coverage check --strict --fail-under 100
+          cache-dependency-path: requirements.txt
+      - run: python -m pip install -r requirements.txt -e .
+      - run: chatgpt-extract-markdown --help
+      - run: python -m pytest
+      - run: pyrefly check --preset strict
+      - run: pyrefly coverage check --strict --fail-under 100
+      - name: Run the documented synthetic example
+        run: chatgpt-extract-markdown examples/synthetic-export --all --output-folder output/example --output-mode normal
