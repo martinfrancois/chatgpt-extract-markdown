@@ -26,5 +26,17 @@ jobs:
       - run: python -m pytest
       - run: pyrefly check --preset strict
       - run: pyrefly coverage check --strict --fail-under 100
+      # pip builds the editable install above with the newest setuptools, so only this step checks
+      # the minimum that pyproject.toml declares, and it fails on setuptools deprecations pip hides.
+      - name: Build and run the wheel with the minimum setuptools
+        env:
+          # The venv's bundled pip is older than the runner's and would print an upgrade notice.
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+        run: |
+          python -m venv "$RUNNER_TEMP/minimum-setuptools"
+          "$RUNNER_TEMP/minimum-setuptools/bin/pip" install "$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["build-system"]["requires"][0].replace(">=", "==", 1))')"
+          "$RUNNER_TEMP/minimum-setuptools/bin/python" -c 'import sys, warnings; from setuptools.warnings import SetuptoolsDeprecationWarning; warnings.simplefilter("error", SetuptoolsDeprecationWarning); from setuptools import build_meta; build_meta.build_wheel(sys.argv[1])' "$RUNNER_TEMP/wheel"
+          "$RUNNER_TEMP/minimum-setuptools/bin/pip" install --no-deps "$RUNNER_TEMP"/wheel/*.whl
+          "$RUNNER_TEMP/minimum-setuptools/bin/chatgpt-extract-markdown" --help
       - name: Run the documented synthetic example
         run: chatgpt-extract-markdown examples/synthetic-export --all --output-folder output/example --output-mode normal

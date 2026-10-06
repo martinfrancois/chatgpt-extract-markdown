@@ -227,7 +227,9 @@ pyrefly coverage check --strict --fail-under 100
 
 Both commands are also run by the GitHub Actions workflow in `.github/workflows/ci.yml`.
 
-CI also runs the documented synthetic example. Actions use pinned commits and
+CI also runs the documented synthetic example, and it builds the wheel with the
+minimum setuptools version in `pyproject.toml`, failing on setuptools deprecation
+warnings. Actions use pinned commits and
 read-only repository permissions. Renovate pins development dependencies, waits
 seven days for ordinary releases, and keeps major updates for review. Eligible
 non-major updates merge after required checks pass; security updates bypass the
