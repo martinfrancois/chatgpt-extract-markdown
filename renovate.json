@@ -52,6 +52,13 @@
       "automerge": true
     },
     {
+      "description": "requires-python declares which Python versions this project supports, not which version to install, so the repository-wide rangeStrategy pin is wrong for it. Pinning turned >=3.10 into ==3.14.8, which would make pip refuse to install the tool on every other Python version. replace keeps the declared range and only rewrites it when a release falls outside it.",
+      "matchDepTypes": [
+        "requires-python"
+      ],
+      "rangeStrategy": "replace"
+    },
+    {
       "matchManagers": [
         "pep621"
       ],
