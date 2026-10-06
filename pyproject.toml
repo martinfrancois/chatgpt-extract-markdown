@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Extract ChatGPT export conversations to Markdown."
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.10"
+requires-python = "==3.14.8"
 dependencies = []
 keywords = ["chatgpt", "export", "markdown", "conversation"]
 classifiers = [
