@@ -1,0 +1,31 @@
+name: Bug report
+description: Report something the extractor doesn't do as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Leave out real ChatGPT exports, transcript content, private paths and personal data, also from logs and screenshots. A small synthetic export that shows the problem helps most.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The command you ran and a small synthetic export, or the JSON shape that triggers the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Commit, Python version, operating system, and anything else that matters here.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output or logs
+      render: text
